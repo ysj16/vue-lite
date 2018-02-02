@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Document</title>
+</head>
+<body>
+  <script src="vue.js"></script>
+  <script>
+    var app = new Vue({
+      data: function () {
+        return {
+          a: 1,
+          b: {
+            c: 2
+          }
+        }
+      }
+    })
+    app.$watch('a', function () {
+      console.log('a is change')
+    })
+    app.$watch('a', function () {
+      console.log('a is change2')
+    })
+    app.a = 3
+  </script>
+</body>
+</html>
