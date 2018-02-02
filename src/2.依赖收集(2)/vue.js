@@ -129,5 +129,8 @@
       }
     })
   }
+  function initComputed (vm) {
+    var computed = vm.computed
+  }
   window.Vue = Vue
 })()
