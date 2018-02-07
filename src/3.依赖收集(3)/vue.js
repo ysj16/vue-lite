@@ -153,6 +153,7 @@
   }
   function initState (vm) {
     initData(vm)
+    initComputed(vm)
   }
   function initData (vm) {
     var data = vm.$options.data
@@ -178,7 +179,21 @@
     })
   }
   function initComputed (vm) {
-    var computed = vm.computed
+    var computed = vm._computed = vm.$options.computed
+    var keys = Object.keys(computed)
+    var i = keys.length
+    while (i--) {
+      proxyComputed(vm, keys[i])
+    }
+  }
+  function proxyComputed (vm, key) {
+    Object.defineProperty(vm, key, {
+      configurable: true,
+      enumerable: true,
+      get: function () {
+        return vm._computed[key].call(vm)
+      }
+    })
   }
   window.Vue = Vue
 })()

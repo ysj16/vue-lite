@@ -16,6 +16,11 @@
           },
           arr: [1,2,3]
         }
+      },
+      computed: {
+        computed1: function () {
+          return this.a + this.b.c
+        }
       }
     })
     app.$watch('a', function () {
@@ -27,9 +32,12 @@
     app.$watch('b', function () {
       console.log('b is change')
     }, {deep: true})
-    var test = app.arr.splice(0,1,11)
-    // app.a = 3
-    app.b.c = 3
+    app.$watch('computed1', function () {
+      console.log('computed1 is change')
+    })
+    // var test = app.arr.splice(0,1,11)
+    app.a = 2
+    // app.b.c = 3
   </script>
 </body>
 </html>
