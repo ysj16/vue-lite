@@ -178,6 +178,7 @@
       }
     })
   }
+  // 初始化computed
   function initComputed (vm) {
     var computed = vm._computed = vm.$options.computed
     var keys = Object.keys(computed)
@@ -186,6 +187,7 @@
       proxyComputed(vm, keys[i])
     }
   }
+  // 代理computed属性到vm实例上
   function proxyComputed (vm, key) {
     Object.defineProperty(vm, key, {
       configurable: true,
