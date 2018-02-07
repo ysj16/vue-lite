@@ -23,11 +23,14 @@
   /*Observer Array*/
   var initArrayMethod = function (arr) {
     var arrayProto = Array.prototype
+    // 复制原生数组原型上的方法，并替换掉其中的7个
     var arrayMethods = Object.create(arrayProto)
     ;['push', 'pop', 'shift', 'unshift', 'splice', 'sort', 'reverse'].forEach(function(method) {
       var origin = arrayMethods[method]
       arrayMethods[method] = function () {
+        // 保存原生数组调用的结果
         var result = origin.apply(this, arguments)
+        // 这里就是调用Observer实例中的dep
         this.__ob__.dep.notify()
         return result
       }
