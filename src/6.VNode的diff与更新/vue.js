@@ -285,15 +285,18 @@
     Vue.prototype.__patch__ = function (oldVnode, vnode, parentElm, refElm) {
       var insertedVnodeQueue = []
       var isRealElement = oldVnode.nodeType
-      // 若isRealElement为true，说明传入的oldVnode为真实的dom节点，则把vnode绑定到这个dom节点
-      if (isRealElement) {
-        oldVnode = emptyNodeAt(oldVnode)
+      if (!isRealElement && sameVnode(oldVnode, vnode)) {
+      } else {
+        // 若isRealElement为true，说明传入的oldVnode为真实的dom节点，则把vnode绑定到这个dom节点
+        if (isRealElement) {
+          oldVnode = emptyNodeAt(oldVnode)
+        }
+        var oldElm = oldVnode.elm
+        var parentElm = nodeOps.parentNode(oldElm)
+        createElm(vnode, parentElm, nodeOps.nextSibling(oldElm))
+        // 移除老的dom元素
+        removeVnodes(parentElm, [oldVnode], 0, 0)
       }
-      var oldElm = oldVnode.elm
-      var parentElm = nodeOps.parentNode(oldElm)
-      createElm(vnode, parentElm, nodeOps.nextSibling(oldElm))
-      // 移除老的dom元素
-      removeVnodes(parentElm, [oldVnode], 0, 0)
     }
     // $createElement方法返回vnode对象
     Vue.prototype.$createElement = function (tag, data, children) {
