@@ -12,38 +12,25 @@
       el: document.getElementById('app'),
       data: function () {
         return {
-          a: 1,
-          b: {
-            c: 2
-          },
-          arr: [1,2,3]
-        }
-      },
-      computed: {
-        computed1: function () {
-          return this.a + this.b.c
+          title: '通讯录',
+          list: [{name: '张三', addr: '深圳市', phone: '18777777777'}, {name: '李四', addr: '深圳市', phone: '18777777777'}]
         }
       },
       render: function (h) {
         return h(
           'div',
-          {attrs: {id: 'test', class: 'main'}},
+          {attrs: {class: 'main'}},
           [
-            this.a,
-            h('span', {attrs: {id: 'span1'}}, ['文字222']),
-            h('img', 
-              {
-                attrs: { 
-                  src: 'https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1522305224048&di=7e95c3ff5c9d8ae092c8d9acf99f2bcc&imgtype=0&src=http%3A%2F%2Fimg.zcool.cn%2Fcommunity%2F01626057ff29a1a84a0d304f3b5991.jpg%401280w_1l_2o_100sh.jpg',
-                  width: '200px'
-                }
-              }
-            )
+            h('h2', {}, [this.title]),
+            h('ul', {}, this.list.map(function(item) {
+              return h('li', {}, [item.name, h('span', {attrs: {class: 'phone'}}, [item.phone])])
+            }))
           ]
         )
       }
     })
-    // app.a = 2
+    app.list.push({name: '王五', phone: '110'})
+    app.list.splice(0, 1, {name: '张三三', phone: '1822222222'})
   </script>
 </body>
 </html>

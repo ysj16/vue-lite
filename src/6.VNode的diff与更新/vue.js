@@ -217,7 +217,7 @@
   }
   // 初始化computed
   function initComputed (vm) {
-    var computed = vm._computed = vm.$options.computed
+    var computed = vm._computed = vm.$options.computed || {}
     var keys = Object.keys(computed)
     var i = keys.length
     while (i--) {
@@ -250,6 +250,14 @@
   function emptyNodeAt (elm) {
     return new VNode(elm.tagName.toLowerCase(), {}, [], undefined, elm)
   }
+  function isDef (v) {
+    return v !== undefined && v !== null
+  }
+  // 判断两个vnode是否是同一个节点的
+  function sameVnode (a, b) {
+    return a.key === b.key && a.tag === b.tag && isDef(a.data) === isDef(a.data)
+  }
+  // 一个空vnode对象
   var emptyNode = new VNode('', {}, [])
 
   /*挂载组件相关*/
@@ -286,6 +294,7 @@
       var insertedVnodeQueue = []
       var isRealElement = oldVnode.nodeType
       if (!isRealElement && sameVnode(oldVnode, vnode)) {
+        patchVnode(oldVnode, vnode)
       } else {
         // 若isRealElement为true，说明传入的oldVnode为真实的dom节点，则把vnode绑定到这个dom节点
         if (isRealElement) {
@@ -335,6 +344,9 @@
     },
     insertBefore: function (parent, elm, nextElm) {
       parent.insertBefore(elm, nextElm)
+    },
+    setTextContent: function (el, content) {
+      el.textContent = content
     }
   }
   // 创建真实dom，refElm为插入在哪个元素之前
@@ -366,6 +378,35 @@
       }
     }
   }
+  // 更新vnode
+  function patchVnode (oldVnode, vnode) {
+    if (oldVnode === vnode) {
+      return
+    }
+    var data = vnode.data
+    var elm = vnode.elm = oldVnode.elm
+    var oldCh = oldVnode.children
+    var ch = vnode.children
+    if (!isDef(vnode.text)) {
+      if (isDef(oldCh) && isDef(ch)) { //若新老vnode都有子节点，则调用updateChildren方法进行diff，更新子节点
+        if (oldCh !== ch) updateChildren(elm, oldCh, ch)
+      } else if (isDef(oldCh)) { // 若只存在oldCh, 则移除oldCh对应的节点
+        removeVnodes(elm, oldCh, 0, oldCh.length -1)
+      } else if (isDef(ch)) { // 若只存在ch，则添加ch到父节点中
+        addVnodes(elm, null, ch, 0, ch.length - 1)
+      } else if (isDef(oldVnode.text)) { // 若都不存在，且oldVnode有text，则清空文本内容
+        nodeOps.setTextContent(elm, '')
+      }
+    } else if (vnode.text !== oldVnode.text){
+      nodeOps.setTextContent(elm, vnode.text)
+    }
+  }
+  // 添加vnodes到文档中
+  function addVnodes (parentElm, refElm, vnodes, startIdx, endIdx) {
+    for (; startIdx <= endIdx; startIdx++) {
+      createElm(vnodes[startIdx], parentElm, refElm)
+    }
+  }
   // 移除旧的Vnode
   function removeVnodes (parentElm, vnodes, startIdx, endIdx) {
     for(; startIdx <= endIdx; startIdx++) {
@@ -390,6 +431,50 @@
       }
     }
   }
+  // 子节点的diff
+  function updateChildren (elm, oldCh, ch) {
+    var newStartIdx = 0,
+        oldStartIdx = 0,
+        newEndIdx = ch.length - 1,
+        oldEndIdx = oldCh.length - 1,
+        newStartVnode = ch[newStartIdx],
+        oldStartVnode = oldCh[oldStartIdx],
+        newEndVnode = ch[newEndIdx],
+        oldEndVnode = oldCh[oldEndIdx];
+    while(oldStartIdx <= oldEndIdx && newStartIdx <= newEndIdx) {
+      if (!isDef(oldStartVnode)) {
+        oldStartVnode = oldCh[++oldStartIdx]
+      } else if (!isDef(oldEndVnode)) {
+        oldEndVnode = oldCh[--oldEndIdx]
+      // 下面四个if两两对比新旧vnode的头尾
+      } else if (sameVnode(oldStartVnode, newStartVnode)) {
+        patchVnode(oldStartVnode, newStartVnode)
+        newStartVnode = ch[++newStartIdx]
+        oldStartVnode = oldCh[++oldStartIdx]
+      } else if (sameVnode(oldEndVnode, newEndVnode)) {
+        patchVnode(oldEndVnode, newEndVnode)
+        newEndVnode = ch[--newEndIdx]
+        oldEndVnode = oldCh[--oldEndIdx]
+      } else if (sameVnode(oldStartVnode, newEndVnode)) {
+        patchVnode(oldStartVnode, newEndVnode)
+        nodeOps.insertBefore(elm, oldStartVnode.elm, nodeOps.nextSibling(oldEndVnode.elm))
+        oldStartVnode = oldCh(++oldStartIdx)
+        newEndVnode = ch[--newEndIdx]
+      } else if (sameVnode(oldEndVnode, newStartVnode)) {
+        patchVnode(oldEndVnode, newStartVnode)
+        nodeOps.insertBefore(elm, oldEndVnode.elm, oldStartVnode.elm)
+        oldEndVnode = oldCh[--oldEndIdx]
+        newStartVnode = ch[++newStartIdx]
+      }
+      if (oldStartIdx > oldEndIdx && newStartIdx <= newEndIdx) {
+        var refElm = isDef(ch[newEndIdx + 1]) ? ch[newEndIdx + 1].elm : null
+        addVnodes(elm, refElm, ch, newStartIdx, newEndIdx)
+      } else if (newStartIdx > newEndIdx && oldStartIdx <= oldEndIdx) {
+        removeVnodes(elm, oldCh, oldStartIdx, oldEndIdx)
+      }
+    }
+  }
+  // 更新节点的attr
   function updateAttrs (oldVnode, vnode) {
     var oldAttrs = oldVnode.data.attrs || {},
         attrs = vnode.data.attrs || {}
