@@ -268,7 +268,7 @@
       var prevVnode = vm._vnode
       vm._vnode = vnode
       if (!prevVnode) { // 首次渲染
-        vm.$el = this.__patch__(vm.$el, vnode, vm.$options._parentElm, vm.$options._refElm)
+        vm.$el = this.__patch__(vm.$el, vnode)
       } else {
         vm.$el = this.__patch__(prevVnode, vnode)
       }
@@ -283,9 +283,8 @@
     }
     // 挂载、更新vnode到页面上
     Vue.prototype.__patch__ = function (oldVnode, vnode, parentElm, refElm) {
-      var insertedVnodeQueue = []
       var isRealElement = oldVnode.nodeType
-      // 若isRealElement为true，说明传入的oldVnode为真实的dom节点，则把vnode绑定到这个dom节点
+      // 若isRealElement为true，说明传入的oldVnode为真实的dom节点，则生成一个空vnode实例，其中vnode.elm为传入的dom
       if (isRealElement) {
         oldVnode = emptyNodeAt(oldVnode)
       }

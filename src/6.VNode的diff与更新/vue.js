@@ -276,7 +276,7 @@
       var prevVnode = vm._vnode
       vm._vnode = vnode
       if (!prevVnode) { // 首次渲染
-        vm.$el = this.__patch__(vm.$el, vnode, vm.$options._parentElm, vm.$options._refElm)
+        vm.$el = this.__patch__(vm.$el, vnode)
       } else {
         vm.$el = this.__patch__(prevVnode, vnode)
       }
@@ -291,12 +291,11 @@
     }
     // 挂载、更新vnode到页面上
     Vue.prototype.__patch__ = function (oldVnode, vnode, parentElm, refElm) {
-      var insertedVnodeQueue = []
       var isRealElement = oldVnode.nodeType
       if (!isRealElement && sameVnode(oldVnode, vnode)) {
         patchVnode(oldVnode, vnode)
       } else {
-        // 若isRealElement为true，说明传入的oldVnode为真实的dom节点，则把vnode绑定到这个dom节点
+        // 若isRealElement为true，说明传入的oldVnode为真实的dom节点，则生成一个空vnode实例，其中vnode.elm为传入的dom
         if (isRealElement) {
           oldVnode = emptyNodeAt(oldVnode)
         }
@@ -466,12 +465,14 @@
         oldEndVnode = oldCh[--oldEndIdx]
         newStartVnode = ch[++newStartIdx]
       }
-      if (oldStartIdx > oldEndIdx && newStartIdx <= newEndIdx) {
-        var refElm = isDef(ch[newEndIdx + 1]) ? ch[newEndIdx + 1].elm : null
-        addVnodes(elm, refElm, ch, newStartIdx, newEndIdx)
-      } else if (newStartIdx > newEndIdx && oldStartIdx <= oldEndIdx) {
-        removeVnodes(elm, oldCh, oldStartIdx, oldEndIdx)
-      }
+    }
+    // 循环结束，若oldStartIdx大于oldEndIdx，说明剩余的newVnode是多出来的，调用addVnodes添加到文档中；
+    // 若newStartIdx > newEndIdx, 则说明剩余的oldVnode是多余的，调用removeVnodes方法删除。
+    if (oldStartIdx > oldEndIdx) {
+      var refElm = isDef(ch[newEndIdx + 1]) ? ch[newEndIdx + 1].elm : null
+      addVnodes(elm, refElm, ch, newStartIdx, newEndIdx)
+    } else if (newStartIdx > newEndIdx) {
+      removeVnodes(elm, oldCh, oldStartIdx, oldEndIdx)
     }
   }
   // 更新节点的attr
